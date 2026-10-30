@@ -137,7 +137,7 @@ if (turnout) {
 }
 
 const electionWatch = document.querySelector('[data-election-watch]');
-if (electionWatch && electionWatch.dataset.currentStatus !== 'closed') {
+if (electionWatch) {
     let updating = false;
     const checkStatus = async () => {
         if (document.hidden || updating || document.querySelector('form[data-submitting="true"]')) return;

@@ -84,7 +84,7 @@ Guru dapat mengakses URL dari laptop mana pun tanpa login, sesuai rancangan. **S
 
 Menu **Pengaturan** menyediakan nama sekolah, logo PNG/JPEG maksimal 2 MB, periode OSIS, judul pemilihan, jadwal buka/tutup, dan nama penandatangan laporan. Identitas serta jadwal dikunci setelah pemilihan dibuka; tempat laporan dan penandatangan tetap dapat diperbaiki setelah penutupan. Tanpa identitas tambahan, aplikasi tetap memakai Suara OSIS.
 
-Jadwal menggunakan **WIB** pada formulir dan disimpan sebagai UTC. Isi waktu buka dan tutup bersama; jadwal baru harus dimulai setelah waktu server saat disimpan. Kosongkan keduanya untuk kontrol manual. Pembukaan otomatis menunggu seluruh pemeriksaan kesiapan lengkap; jika batas tutup terlewati, pemilihan ditutup meskipun belum sempat dibuka. Tombol Buka dapat memulai lebih awal, tetapi batas tutup tetap berlaku. Penutupan bersifat final. Waktu pengiriman diperiksa lagi di dalam transaksi sehingga suara tidak diterima setelah batas tutup, termasuk saat scheduler berhenti. Jam laptop server menjadi acuan; laptop siswa hanya menampilkan hitung mundur.
+Jadwal menggunakan **WIB** pada formulir dan disimpan sebagai UTC. Isi waktu buka dan tutup bersama; jadwal baru harus dimulai setelah waktu server saat disimpan. Kosongkan keduanya untuk kontrol manual. Pembukaan otomatis menunggu seluruh pemeriksaan kesiapan lengkap; jika batas tutup terlewati, pemilihan ditutup meskipun belum sempat dibuka. Tombol Buka dapat memulai lebih awal, tetapi batas tutup tetap berlaku. Pemilihan yang sudah ditutup hanya dapat dibuka kembali secara eksplisit oleh guru. Waktu pengiriman diperiksa lagi di dalam transaksi sehingga suara tidak diterima setelah batas tutup, termasuk saat scheduler berhenti. Jam laptop server menjadi acuan; laptop siswa hanya menampilkan hitung mundur.
 
 Dashboard **Ringkasan** memperbarui progres keseluruhan dan per kelas setiap 10 detik selama halaman terlihat. Jika koneksi terganggu, angka terakhir tetap ditampilkan dengan penanda pembaruan tertunda. Tidak ada perolehan calon pada endpoint progres. Setelah ditutup, **Rekap hasil → Unduh PDF** menyediakan laporan A4 dengan tabel hasil, partisipasi kelas, pemeriksaan konsistensi, waktu kegiatan, dan ruang tanda tangan. Waktu kegiatan lama yang belum pernah tercatat ditampilkan sebagai tidak tersedia. PDF dihasilkan lokal; tidak memerlukan Chrome, layanan luar, atau internet setelah `composer install`.
 
@@ -93,10 +93,16 @@ Dashboard **Ringkasan** memperbarui progres keseluruhan dan per kelas setiap 10 
 3. Ketik **BUKA** dan tekan **Buka pemilihan**. Data siswa dan calon terkunci secara permanen untuk kegiatan tersebut.
 4. Siswa memasukkan NIS, memilih satu calon, lalu mengonfirmasi. Sesi berlaku lima menit sejak verifikasi. Setelah commit, konteks siswa dihapus dan halaman berhasil kembali ke awal dalam lima detik. Tanpa JavaScript, tombol kembali tetap tersedia.
 5. Siswa berikutnya harus mulai dari halaman awal. Petugas memeriksa kartu pelajar/identitas sebelum memberikan giliran, tanpa melihat pilihan siswa.
-6. Setelah semua selesai, guru mengetik **TUTUP**. Penutupan memakai penguncian yang sama dengan suara, sehingga menunggu transaksi yang sudah lebih dulu mendapat kunci. Suara yang baru diproses setelah ditutup ditolak. Tidak ada fitur buka ulang.
+6. Setelah semua selesai, guru mengetik **TUTUP**. Penutupan memakai penguncian yang sama dengan suara, sehingga menunggu transaksi yang sudah lebih dulu mendapat kunci. Suara yang baru diproses setelah ditutup ditolak; guru dapat membuka kembali melalui kontrol khusus di bawah.
 7. Lihat rekap dan unduh CSV. Calon dengan nol suara tetap muncul. Tidak ada pilihan individu. Buat backup final dan salin ke media terpisah.
 
 Rekap per calon dan ekspornya ditolak sebelum ditutup, termasuk akses route langsung. Ringkasan selama pemilihan hanya menampilkan jumlah siswa, calon dan partisipasi.
+
+### Membuka kembali pemilihan
+
+Pada **Ringkasan** atau **Rekap hasil**, gunakan panel **Buka kembali pemilihan**. Isi **Batas tutup baru (WIB, opsional)** jika ingin menutup otomatis; kosongkan untuk penutupan manual. Jadwal lama diganti agar waktu yang sudah lewat tidak langsung menutup pemilihan kembali. Ketik **BUKA KEMBALI**, lalu tekan **Buka kembali pemilihan**. Pembukaan kembali memerlukan data siswa, minimal dua calon beserta foto, dan jumlah suara yang sesuai dengan partisipasi.
+
+Seluruh suara dan partisipasi lama dipertahankan. Siswa yang sudah memilih tetap ditolak; siswa yang belum memilih dapat melanjutkan. Data siswa, calon, serta identitas kegiatan tetap dikunci. Waktu pembukaan pertama yang sudah tercatat dipertahankan, dan waktu penutupan diperbarui saat ditutup lagi. Pengumuman disembunyikan otomatis dan rekap/PDF/CSV tidak dapat diakses selama pemilihan kembali berlangsung. Setelah ditutup lagi, panitia perlu mengaktifkan pengumuman kembali. Halaman awal siswa memperbarui status setiap 10 detik.
 
 ## Jaringan tiga laptop
 
@@ -187,4 +193,4 @@ Sesi terenkripsi disimpan di file, ID sesi/token CSRF diganti setelah selesai, t
 
 Ini bukan anonimitas kriptografis terhadap administrator yang menguasai seluruh server, binlog atau jaringan. NIS tanpa login juga tidak membuktikan identitas siswa. Pengawasan petugas dan pembatasan akses fisik/akun server tetap merupakan bagian operasional aplikasi.
 
-Untuk tahun berikutnya: arsipkan database, konfigurasi dan foto; siapkan instalasi/database baru. Tidak tersedia tombol reset suara atau buka ulang yang berisiko dipakai saat pemilihan.
+Untuk tahun berikutnya: arsipkan database, konfigurasi dan foto; siapkan instalasi/database baru. Fitur buka kembali melanjutkan kegiatan yang sama dan tidak menghapus suara atau memberi hak suara ulang. Tidak tersedia tombol reset suara.

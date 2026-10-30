@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Carbon\CarbonInterface;
 use App\Models\Candidate;
 use App\Models\ElectionSetting;
 use App\Models\Participation;
@@ -48,7 +49,7 @@ class ElectionService
         // Expiry takes priority, including when the server missed the entire
         // window or readiness was never completed. Never briefly open late.
         if ($setting->closes_at && $now->greaterThanOrEqualTo($setting->closes_at)) {
-            $setting->update(['status' => 'closed', 'closed_at' => $now]);
+            $setting->update(['status' => 'closed', 'closed_at' => $now, 'results_published' => false]);
         } elseif ($setting->status === 'preparation' && $setting->opens_at &&
             $now->greaterThanOrEqualTo($setting->opens_at) && ! in_array(false, $this->readiness(), true)) {
             $setting->update(['status' => 'open', 'opened_at' => $now]);
@@ -68,7 +69,7 @@ class ElectionService
         return null;
     }
 
-    public function readiness(): array
+    public function readiness(bool $forReopening = false): array
     {
         return [
             'Data siswa tersedia' => Student::query()->exists(),
@@ -76,8 +77,11 @@ class ElectionService
             'Seluruh foto calon tersedia' => Candidate::query()->exists() && Candidate::all()->every(
                 fn (Candidate $candidate) => Storage::disk('photos')->exists($candidate->photo_path)
             ),
+        ] + ($forReopening ? [
+            'Jumlah suara dan partisipasi sesuai' => Vote::query()->count() === Participation::query()->count(),
+        ] : [
             'Suara dan partisipasi masih kosong' => ! Vote::query()->exists() && ! Participation::query()->exists(),
-        ];
+        ]);
     }
 
     public function open(): void
@@ -88,7 +92,7 @@ class ElectionService
             if (in_array(false, $this->readiness(), true)) {
                 throw ValidationException::withMessages(['election' => 'Pemilihan belum siap. Lengkapi seluruh pemeriksaan kesiapan.']);
             }
-            $setting->update(['status' => 'open', 'opened_at' => now()->utc()]);
+            $setting->update(['status' => 'open', 'opened_at' => now()->utc(), 'results_published' => false]);
         });
     }
 
@@ -100,23 +104,55 @@ class ElectionService
             if ($setting->status !== 'open') {
                 throw ValidationException::withMessages(['election' => 'Hanya pemilihan yang sedang dibuka yang dapat ditutup.']);
             }
-            $setting->update(['status' => 'closed', 'closed_at' => now()->utc()]);
+            $setting->update(['status' => 'closed', 'closed_at' => now()->utc(), 'results_published' => false]);
         });
+    }
+
+    public function reopen(?CarbonInterface $closesAt = null): void
+    {
+        $this->reconcile();
+        DB::transaction(function () use ($closesAt) {
+            $setting = ElectionSetting::locked();
+            if ($setting->status !== 'closed') {
+                throw ValidationException::withMessages(['election' => 'Hanya pemilihan yang sudah ditutup yang dapat dibuka kembali.']);
+            }
+            $now = now()->utc();
+            if ($closesAt && $closesAt->lessThanOrEqualTo($now)) {
+                throw ValidationException::withMessages(['reopen_closes_at' => 'Batas tutup baru harus setelah waktu server saat ini.']);
+            }
+            if (in_array(false, $this->readiness(true), true)) {
+                throw ValidationException::withMessages(['election' => 'Pemilihan belum siap dibuka kembali. Pastikan data siswa, minimal dua calon, seluruh foto, serta jumlah suara dan partisipasi sudah sesuai.']);
+            }
+            $setting->update([
+                'status' => 'open',
+                'opened_at' => $setting->opened_at ?? $now,
+                'closed_at' => null,
+                // Replace the old window so an expired deadline cannot immediately close the election again.
+                'opens_at' => $closesAt ? $now : null,
+                'closes_at' => $closesAt?->copy()->utc(),
+                'results_published' => false,
+            ]);
+        }, attempts: 3);
     }
 
     public function results(): array
     {
-        abort_unless(ElectionSetting::current()->status === 'closed', 403, 'Rekap hanya tersedia setelah pemilihan ditutup.');
-        $registered = Student::query()->count();
-        $participated = Participation::query()->count();
-        $votes = Vote::query()->count();
-        return [
-            'registered' => $registered,
-            'participated' => $participated,
-            'remaining' => $registered - $participated,
-            'votes' => $votes,
-            'consistent' => $participated === $votes,
-            'candidates' => Candidate::query()->withCount('votes')->orderBy('number')->get(),
-        ];
+        // Read one snapshot under the same lock used for reopening and voting.
+        return DB::transaction(function () {
+            $setting = ElectionSetting::locked();
+            abort_unless($setting->status === 'closed', 403, 'Rekap hanya tersedia setelah pemilihan ditutup.');
+            $registered = Student::query()->count();
+            $participated = Participation::query()->count();
+            $votes = Vote::query()->count();
+            return [
+                'setting' => $setting,
+                'registered' => $registered,
+                'participated' => $participated,
+                'remaining' => $registered - $participated,
+                'votes' => $votes,
+                'consistent' => $participated === $votes,
+                'candidates' => Candidate::query()->withCount('votes')->orderBy('number')->get(),
+            ];
+        }, attempts: 3);
     }
 }

@@ -21,7 +21,7 @@ class ElectionReportService
     {
         // This is the same guarded source used by the HTML and CSV result pages.
         $results = $this->election->results();
-        $setting = ElectionSetting::current();
+        $setting = $results['setting'];
         $highest = $results['candidates']->max('votes_count');
         $leaders = $results['votes'] > 0
             ? $results['candidates']->where('votes_count', $highest)->pluck('name')->values()->all()

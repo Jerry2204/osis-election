@@ -7,7 +7,7 @@
     <title>@yield('title', $schoolSetting->electionLabel()) · {{ $schoolSetting->schoolLabel() }}</title>
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
     <link rel="stylesheet" href="{{ asset('assets/app.css') }}?v={{ filemtime(public_path('assets/app.css')) }}">
-    <script src="{{ asset('assets/app.js') }}" defer></script>
+    <script src="{{ asset('assets/app.js') }}?v={{ filemtime(public_path('assets/app.js')) }}" defer></script>
 </head>
 <body>
 <a class="skip-link" href="#main">Lewati ke isi halaman</a>

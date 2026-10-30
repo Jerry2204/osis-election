@@ -8,6 +8,7 @@ use App\Models\Participation;
 use App\Models\Student;
 use App\Services\ElectionService;
 use App\Services\ParticipationService;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 
 class TeacherElectionController extends Controller
@@ -43,7 +44,25 @@ class TeacherElectionController extends Controller
 
     public function results(Request $request, ElectionService $service)
     {
-        return view('teacher.results', $service->results() + ['teacherKey' => $request->route('teacherKey'), 'setting' => ElectionSetting::current()]);
+        return view('teacher.results', $service->results() + ['teacherKey' => $request->route('teacherKey')]);
+    }
+
+    public function reopen(Request $request, ElectionService $service)
+    {
+        $data = $request->validate([
+            'confirmation' => ['required', 'in:BUKA KEMBALI'],
+            'reopen_closes_at' => ['nullable', 'string', 'date_format:Y-m-d\TH:i'],
+        ], [
+            'confirmation.in' => 'Ketik BUKA KEMBALI untuk membuka kembali pemilihan.',
+            'reopen_closes_at.date_format' => 'Format batas tutup baru tidak valid.',
+        ]);
+        $closesAt = ! empty($data['reopen_closes_at'])
+            ? CarbonImmutable::createFromFormat('!Y-m-d\TH:i', $data['reopen_closes_at'], 'Asia/Jakarta')->utc()
+            : null;
+        $service->reopen($closesAt);
+
+        return redirect()->route('teacher.dashboard', ['teacherKey' => $request->route('teacherKey')])
+            ->with('status', 'Pemilihan dibuka kembali. Suara lama tetap tersimpan, siswa yang sudah memilih tidak dapat memilih lagi, dan pengumuman hasil disembunyikan.');
     }
 
     public function export(ElectionService $service)

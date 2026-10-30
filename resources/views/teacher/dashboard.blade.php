@@ -25,7 +25,7 @@
 </section>
 <section class="panel control-panel"><h2>{{ $setting->status === 'preparation' ? 'Buka pemilihan' : ($setting->status === 'open' ? 'Tutup pemilihan' : 'Arsipkan hasil') }}</h2>
 @if($setting->status !== 'closed')
-    <p>{{ $setting->status === 'preparation' ? 'Setelah dibuka, data siswa dan calon tidak dapat diubah. Pastikan backup awal sudah dibuat. Jika ada jadwal, tombol ini membuka pemilihan lebih awal.' : 'Setelah ditutup, pemilihan tidak dapat dibuka kembali. Pastikan seluruh siswa sudah mendapat kesempatan.' }}</p>
+    <p>{{ $setting->status === 'preparation' ? 'Setelah dibuka, data siswa dan calon tidak dapat diubah. Pastikan backup awal sudah dibuat. Jika ada jadwal, tombol ini membuka pemilihan lebih awal.' : 'Tutup pemilihan untuk melihat rekap. Guru dapat membuka kembali bagi siswa yang belum memilih; seluruh suara yang sudah masuk tetap tersimpan.' }}</p>
     <form method="post" action="{{ route($setting->status === 'preparation' ? 'teacher.open' : 'teacher.close', ['teacherKey' => $teacherKey]) }}" data-submit-once>@csrf
         <label for="confirmation">Ketik {{ $setting->status === 'preparation' ? 'BUKA' : 'TUTUP' }} untuk konfirmasi</label><input id="confirmation" name="confirmation" type="text" required pattern="{{ $setting->status === 'preparation' ? 'BUKA' : 'TUTUP' }}" autocomplete="off" placeholder="{{ $setting->status === 'preparation' ? 'BUKA' : 'TUTUP' }}" aria-describedby="confirmation-error" @if($errors->has('confirmation')) aria-invalid="true" @endif>
         @include('components.field-error', ['name' => 'confirmation'])
@@ -36,6 +36,7 @@
 @endif
 </section>
 </div>
+@if($setting->status === 'closed')@include('components.reopen-election')@endif
 <section class="panel turnout-panel"><div class="section-heading"><h2>Partisipasi per kelas</h2><span class="badge badge-neutral">Pilihan individu tetap rahasia</span></div>
     <progress class="turnout-progress" data-overall-progress value="{{ $turnout['percentage'] }}" max="100" aria-label="Persentase partisipasi seluruh siswa">{{ $turnout['percentage'] }}%</progress>
     <p class="field-help" data-progress-message role="status">Data saat halaman dimuat. Diperbarui setiap 10 detik.</p>

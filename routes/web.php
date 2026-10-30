@@ -49,6 +49,7 @@ Route::prefix('ruang-guru/{teacherKey}')->where(['teacherKey' => '[a-f0-9]{64}']
     Route::delete('/calon/{candidate}', [TeacherCandidateController::class, 'destroy'])->name('candidates.destroy');
     Route::post('/buka', [TeacherElectionController::class, 'open'])->name('open');
     Route::post('/tutup', [TeacherElectionController::class, 'close'])->name('close');
+    Route::post('/buka-kembali', [TeacherElectionController::class, 'reopen'])->name('reopen')->block();
     Route::get('/rekap', [TeacherElectionController::class, 'results'])->name('results');
     Route::get('/rekap.csv', [TeacherElectionController::class, 'export'])->name('export');
     Route::get('/rekap.pdf', [TeacherReportController::class, 'download'])->name('report.pdf');

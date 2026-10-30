@@ -40,7 +40,7 @@
             <div><label for="opens-at">Tanggal dan jam buka (WIB)</label><input id="opens-at" name="opens_at" type="datetime-local" value="{{ old('opens_at', $setting->opens_at?->setTimezone('Asia/Jakarta')->format('Y-m-d\TH:i')) }}" @disabled($setting->status !== 'preparation') @error('opens_at') aria-invalid="true" aria-describedby="opens-at-error" @enderror>@error('opens_at')<p id="opens-at-error" class="field-error" role="alert">{{ $message }}</p>@enderror</div>
             <div><label for="closes-at">Tanggal dan jam tutup (WIB)</label><input id="closes-at" name="closes_at" type="datetime-local" value="{{ old('closes_at', $setting->closes_at?->setTimezone('Asia/Jakarta')->format('Y-m-d\TH:i')) }}" @disabled($setting->status !== 'preparation') @error('closes_at') aria-invalid="true" aria-describedby="closes-at-error" @enderror>@error('closes_at')<p id="closes-at-error" class="field-error" role="alert">{{ $message }}</p>@enderror</div>
         </div>
-        <p class="field-help">Tombol Buka dapat memulai pemilihan lebih awal; jadwal tutup tetap berlaku. Pemilihan yang sudah ditutup tidak dapat dibuka kembali.</p>
+        <p class="field-help">Tombol Buka dapat memulai pemilihan lebih awal; jadwal tutup tetap berlaku. Setelah ditutup, guru dapat membuka kembali melalui Ringkasan atau Rekap hasil dengan batas tutup baru.</p>
     </section>
     <section class="panel settings-panel">
         <h2>Penandatangan laporan</h2>

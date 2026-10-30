@@ -3,6 +3,7 @@
 @section('content')
 <div class="page-heading"><div><div class="eyebrow">PEMILIHAN SELESAI</div><h1>Setiap suara berarti.</h1><p>Rekap akhir {{ $setting->electionLabel() }}. Pilihan individu tetap rahasia.</p></div><div class="heading-actions"><a class="button button-secondary" href="{{ route('teacher.export', ['teacherKey' => $teacherKey]) }}">Unduh CSV <span aria-hidden="true">↓</span></a><a class="button button-primary" href="{{ route('teacher.report.pdf', ['teacherKey' => $teacherKey]) }}">Unduh PDF <span aria-hidden="true">↓</span></a></div></div>
 @unless($consistent)<div class="alert alert-warning" role="alert"><strong>Perlu pemeriksaan.</strong> Jumlah partisipasi berbeda dari total suara. Hubungi petugas teknis sebelum mengumumkan hasil.</div>@endunless
+@include('components.reopen-election')
 <section class="panel announcement-control">
     <div class="section-heading"><h2>Layar pengumuman hasil</h2><span class="badge {{ $setting->results_published && $consistent ? 'badge-open' : 'badge-neutral' }}">{{ $setting->results_published && $consistent ? 'Pengumuman aktif' : 'Belum ditampilkan' }}</span></div>
     <p class="field-help">Tampilkan grafik hasil akhir pada proyektor. Pengumuman hanya menampilkan perolehan calon dan ringkasan partisipasi.</p>
