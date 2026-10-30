@@ -40,9 +40,14 @@ class VoterSessionController extends Controller
         }
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+        $closesAt = ElectionSetting::current()->closes_at;
+        $expiresAt = now()->timestamp + config('election.voting_lifetime');
+        if ($closesAt) {
+            $expiresAt = min($expiresAt, $closesAt->timestamp);
+        }
         $request->session()->put('voting', [
             'student_id' => $student->id,
-            'expires_at' => now()->timestamp + config('election.voting_lifetime'),
+            'expires_at' => $expiresAt,
             'token' => Str::random(64),
         ]);
         return redirect()->route('voting.candidates');

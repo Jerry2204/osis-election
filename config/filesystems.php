@@ -38,7 +38,7 @@ return [
 
         'local' => [
             'driver' => 'local',
-            'root' => storage_path('app/private'),
+            'root' => env('PRIVATE_STORAGE_DIRECTORY', storage_path('app/private')),
             'serve' => false,
             'throw' => false,
             'report' => false,

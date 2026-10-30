@@ -6,6 +6,7 @@
         <div class="eyebrow"><span class="tiny-line"></span> SATU SISWA, SATU SUARA</div>
         <h1>Suaramu,<br>masa depan <span class="highlight">kita.</span></h1>
         <p class="lead">Perubahan dimulai dari pilihanmu. Kenali calonnya,<br class="desktop-break"> tentukan pilihan, dan ikut bentuk masa depan sekolah.</p>
+        @if($setting->school_name || $setting->osis_period || $setting->election_title)<p class="event-identity">{{ $setting->electionLabel() }}{{ $setting->osis_period ? ' · '.$setting->osis_period : '' }}</p>@endif
         @include('components.steps', ['step' => 1])
         <div class="entry-card">
             <div class="card-heading"><span class="small-icon" aria-hidden="true">↗</span><div><h2>Mulai memilih</h2><p>Siapkan Nomor Induk Siswa kamu.</p></div>
@@ -15,7 +16,8 @@
                 <form action="{{ route('voting.verify') }}" method="post" data-submit-once>
                     @csrf
                     <label for="nis">Nomor Induk Siswa (NIS)</label>
-                    <div class="input-wrap"><span aria-hidden="true">#</span><input id="nis" name="nis" type="text" inputmode="numeric" pattern="[0-9]+" maxlength="32" placeholder="Masukkan NIS kamu" autocomplete="off" spellcheck="false" required autofocus aria-describedby="nis-help"></div>
+                    <div class="input-wrap"><span aria-hidden="true">#</span><input id="nis" name="nis" type="text" inputmode="numeric" pattern="[0-9]+" maxlength="32" placeholder="Masukkan NIS kamu" autocomplete="off" spellcheck="false" required autofocus aria-describedby="nis-help{{ ($notice ?? null) ? ' nis-error' : '' }}" @if($notice ?? null) aria-invalid="true" @endif></div>
+                    @if($notice ?? null)<p id="nis-error" class="field-error" role="alert">{{ $notice }}</p>@endif
                     <p id="nis-help" class="field-help">Masukkan NIS lengkap, termasuk angka nol di awal.</p>
                     <button type="submit" class="button button-primary button-full">Lanjut pilih calon <span aria-hidden="true">→</span></button>
                 </form>
@@ -23,6 +25,11 @@
                 <div class="closed-message"><h3>{{ $setting->status === 'closed' ? 'Terima kasih atas partisipasinya.' : 'Sebentar lagi, giliran suaramu.' }}</h3><p>{{ $setting->status === 'closed' ? 'Pemilihan telah selesai. Pengumuman hasil akan disampaikan oleh panitia.' : 'Panitia sedang menyiapkan pemilihan. Silakan ikuti arahan petugas.' }}</p></div>
                 <a class="button button-secondary button-full" href="{{ route('home') }}">Periksa status pemilihan <span aria-hidden="true">↻</span></a>
             @endif
+            @if($setting->status !== 'closed' && $setting->opens_at && $setting->closes_at)
+                @php($scheduleTarget = $setting->status === 'open' ? $setting->closes_at : $setting->opens_at)
+                <div class="schedule-card"><span>{{ $setting->status === 'open' ? 'Pemilihan ditutup' : 'Jadwal pemilihan dimulai' }}</span><strong>{{ $scheduleTarget->timezone('Asia/Jakarta')->format('d/m/Y H:i') }} WIB</strong><small data-schedule-countdown="{{ max(0, now()->diffInSeconds($scheduleTarget, false)) }}">{{ $setting->status === 'preparation' && $scheduleTarget->isPast() ? 'Menunggu kesiapan panitia.' : 'Ikuti jadwal dan arahan petugas.' }}</small></div>
+            @endif
+            <span data-election-watch data-status-url="{{ route('election.status') }}" data-current-status="{{ $setting->status }}" class="sr-only" aria-hidden="true"></span>
             <p class="privacy-note"><svg aria-hidden="true" viewBox="0 0 20 20" fill="none"><rect x="4" y="8" width="12" height="9" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 8V6a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="1.5"/></svg>Pilihanmu bersifat rahasia.</p>
         </div>
         <p class="need-help">Ada kendala dengan NIS? <strong>Hubungi petugas di dekatmu.</strong></p>

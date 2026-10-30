@@ -48,7 +48,9 @@ Perintah `election:teacher-url --generate` hanya membuat kode ketika belum terse
 
 ### Impor siswa melalui Ruang Guru
 
-Buka URL guru, lalu pilih menu **Data siswa** (`/ruang-guru/{teacherKey}/siswa`). Klik **Unduh template CSV**, isi data siswa di bawah header, pilih berkas tersebut, lalu klik **Impor siswa**. Template kosong juga tersedia di `docs/template-siswa.csv`. Setelah berhasil, daftar siswa dan jumlah terdaftar akan diperbarui. Daftar menampilkan 50 siswa per halaman.
+Buka URL guru, lalu pilih menu **Data siswa** (`/ruang-guru/{teacherKey}/siswa`). Klik **Unduh template CSV**, isi data siswa di bawah header, pilih berkas tersebut, lalu klik **Periksa dan pratinjau**. Periksa jumlah data, 20 contoh baris pertama, dan pesan kesalahan. Jika seluruh data valid, klik **Simpan impor**. Unggahan belum menyimpan siswa sampai konfirmasi ini. Template kosong tersedia di `docs/template-siswa.csv`. Pratinjau terikat sesi guru, berlaku 30 menit, dan dapat dibatalkan. Konfirmasi selalu memeriksa ulang data serta kesiapan pemilihan.
+
+Daftar menampilkan 50 siswa per halaman. Gunakan pencarian NIS/nama, filter kelas, dan status sudah/belum memilih secara bersamaan; filter tetap aktif saat berpindah halaman. Status partisipasi tidak menampilkan calon yang dipilih siswa.
 
 Impor hanya tersedia saat persiapan. Jika ada kesalahan, halaman menampilkan nomor baris untuk diperbaiki dan tidak menyimpan bagian mana pun dari berkas. NIS duplikat dalam berkas maupun yang sudah terdaftar membatalkan seluruh impor; data lama tidak ditimpa. Setelah pemilihan dibuka atau ditutup, daftar tetap dapat dilihat tetapi impor dikunci.
 
@@ -79,6 +81,12 @@ Buka URL hasil `php artisan election:teacher-url`. Menu **Kelola calon** menyedi
 Guru dapat mengakses URL dari laptop mana pun tanpa login, sesuai rancangan. **Siapa pun yang mengetahui URL mempunyai kemampuan yang sama.** Jangan tautkan alamat pada halaman siswa, jangan bagikan di grup siswa, dan jangan menyimpannya di browser laptop siswa. Aplikasi tidak menerapkan pembatasan IP.
 
 ## Operasional pemilihan
+
+Menu **Pengaturan** menyediakan nama sekolah, logo PNG/JPEG maksimal 2 MB, periode OSIS, judul pemilihan, jadwal buka/tutup, dan nama penandatangan laporan. Identitas serta jadwal dikunci setelah pemilihan dibuka; tempat laporan dan penandatangan tetap dapat diperbaiki setelah penutupan. Tanpa identitas tambahan, aplikasi tetap memakai Suara OSIS.
+
+Jadwal menggunakan **WIB** pada formulir dan disimpan sebagai UTC. Isi waktu buka dan tutup bersama; jadwal baru harus dimulai setelah waktu server saat disimpan. Kosongkan keduanya untuk kontrol manual. Pembukaan otomatis menunggu seluruh pemeriksaan kesiapan lengkap; jika batas tutup terlewati, pemilihan ditutup meskipun belum sempat dibuka. Tombol Buka dapat memulai lebih awal, tetapi batas tutup tetap berlaku. Penutupan bersifat final. Waktu pengiriman diperiksa lagi di dalam transaksi sehingga suara tidak diterima setelah batas tutup, termasuk saat scheduler berhenti. Jam laptop server menjadi acuan; laptop siswa hanya menampilkan hitung mundur.
+
+Dashboard **Ringkasan** memperbarui progres keseluruhan dan per kelas setiap 10 detik selama halaman terlihat. Jika koneksi terganggu, angka terakhir tetap ditampilkan dengan penanda pembaruan tertunda. Tidak ada perolehan calon pada endpoint progres. Setelah ditutup, **Rekap hasil → Unduh PDF** menyediakan laporan A4 dengan tabel hasil, partisipasi kelas, pemeriksaan konsistensi, waktu kegiatan, dan ruang tanda tangan. Waktu kegiatan lama yang belum pernah tercatat ditampilkan sebagai tidak tersedia. PDF dihasilkan lokal; tidak memerlukan Chrome, layanan luar, atau internet setelah `composer install`.
 
 1. Pada **Ringkasan**, periksa data siswa tersedia, minimal dua calon, seluruh foto tersedia, dan jumlah suara serta partisipasi nol.
 2. Buat backup awal: `php artisan election:backup`.
@@ -119,7 +127,9 @@ Pada Windows Task Scheduler, buat tugas dengan akun petugas:
 - Pemicu: setiap satu menit selama pemilihan; hindari menjalankan instance yang tumpang tindih.
 - Pastikan akun tugas menemukan PHP/MySQL di PATH dan dapat menulis tujuan backup.
 
-Scheduler menjalankan backup setiap 15 menit dan membersihkan sesi tidak aktif setiap menit. Hasil backup terjadwal ditulis ke `storage/logs/backup.log`; periksa kegagalan di sana dan pada riwayat Task Scheduler. Pastikan backup pertama benar-benar muncul di media tujuan. Tidak ada tugas Windows yang didaftarkan otomatis.
+Skrip `start-local.ps1` sekarang memulai scheduler proyek dalam proses tersembunyi; `stop-local.ps1` memintanya menyelesaikan tugas yang berjalan lalu berhenti sebelum database dihentikan. Server yang sudah aktif dapat memulai scheduler dengan `scripts/start-scheduler.ps1`; gunakan `scripts/stop-scheduler.ps1` untuk menghentikan scheduler saja. Skrip tidak mendaftarkan tugas Windows global. Jika kebijakan PowerShell memblokir skrip lokal, gunakan `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\start-scheduler.ps1` untuk menjalankannya pada proses tersebut.
+
+Scheduler memeriksa jadwal dan sesi setiap menit, membersihkan pratinjau kedaluwarsa setiap lima menit, serta menjalankan backup setiap 15 menit. Sesi guru berlaku minimal 30 menit agar pratinjau tetap dapat digunakan; kelayakan sesi siswa tetap lima menit atau sampai batas tutup pemilihan. Pembersihan berkas sesi mempertimbangkan durasi guru. Hasil backup ditulis ke `storage/logs/backup.log`, keluaran scheduler ke `.runtime/scheduler.log`, dan kesalahan proses ke `.runtime/scheduler-error.log`. Periksa bahwa backup pertama benar-benar muncul. Bila memakai Task Scheduler manual seperti contoh di atas, gunakan satu mekanisme scheduler saja.
 
 Cadangkan juga kode siap jalan beserta `vendor`, foto di `storage/app/private/candidate-photos`, serta `.env` secara aman. Batasi akses salinan karena berisi data siswa dan konfigurasi rahasia. Lindungi file `.runtime/mysql-admin.json` pada instalasi lokal. Hindari menyalin berkas data MySQL yang sedang aktif sebagai pengganti dump konsisten.
 

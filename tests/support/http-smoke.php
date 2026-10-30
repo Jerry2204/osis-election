@@ -22,11 +22,19 @@ imagefilledellipse($image, 200, 140, 110, 110, $foreground);
 imagefilledellipse($image, 200, 360, 250, 260, $foreground);
 imagepng($image, $imagePath);
 imagedestroy($image);
-$server = new \Symfony\Component\Process\Process([PHP_BINARY, 'artisan', 'serve', '--host=127.0.0.1', '--port=8082', '--no-reload', '--env=testing'], base_path(), [
+$serverEnvironment = array_merge(getenv(), [
     'APP_ENV' => 'testing', 'SESSION_COOKIE' => 'osis_http_smoke', 'SESSION_DRIVER' => 'file', 'SESSION_ENCRYPT' => 'true', 'CACHE_STORE' => 'file',
     'CANDIDATE_PHOTO_DIRECTORY' => $directory.'/photos',
-], null, 120);
-$server->start();
+    'PRIVATE_STORAGE_DIRECTORY' => $directory.'/private',
+]);
+// Start PHP directly so cleanup can terminate exactly this server process on
+// Windows without depending on taskkill process-tree enumeration privileges.
+$server = proc_open([PHP_BINARY, '-S', '127.0.0.1:8082', '-t', public_path(), base_path('vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php')], [
+    0 => ['file', PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null', 'r'],
+    1 => ['file', $directory.'/server.log', 'a'],
+    2 => ['file', $directory.'/server.log', 'a'],
+], $serverPipes, public_path(), $serverEnvironment, ['bypass_shell' => true]);
+if (! is_resource($server)) throw new RuntimeException('HTTP server process could not start.');
 $assert = function (bool $condition, string $message): void {
     if (! $condition) throw new RuntimeException($message);
 };
@@ -71,6 +79,27 @@ try {
     $assert($code === 200, 'Teacher dashboard should render.');
     [$code] = $request($teacher.'/calon', $teacherJar, ['number' => 1]);
     $assert($code === 419, 'Real HTTP request without CSRF should fail.');
+    [$code, $body] = $request($teacher.'/pengaturan', $teacherJar);
+    $assert($code === 200, 'Settings should render.');
+    [$code] = $request($teacher.'/pengaturan', $teacherJar, [
+        '_token' => $token($body), '_method' => 'PATCH', 'school_name' => 'SMA Simulasi',
+        'election_title' => 'Pemilihan Simulasi', 'osis_period' => '2026/2027',
+        'report_place' => 'Jakarta', 'committee_chair' => 'Panitia Simulasi',
+    ]);
+    $assert($code === 302, 'Settings should save with real CSRF.');
+    $csvPath = $directory.'/siswa.csv';
+    file_put_contents($csvPath, "nis,nama,kelas\n000008,Siswa Impor,X B\n");
+    [$code, $body] = $request($teacher.'/siswa', $teacherJar);
+    [$code] = $request($teacher.'/siswa/impor', $teacherJar, [
+        '_token' => $token($body), 'file' => new CURLFile($csvPath, 'text/csv', 'siswa.csv'),
+    ]);
+    $assert($code === 302 && \App\Models\Student::query()->count() === 1, 'Preview upload must not save students.');
+    [$code, $body] = $request($teacher.'/siswa/impor/pratinjau', $teacherJar);
+    $assert($code === 200 && str_contains($body, '000008'), 'Preview must survive real cookie round trip.');
+    [$code] = $request($teacher.'/siswa/impor/konfirmasi', $teacherJar, ['_token' => $token($body), 'import_token' => $token($body, 'import_token')]);
+    $assert($code === 302 && \App\Models\Student::query()->where('nis', '000008')->exists(), 'Preview should import only after confirmation.');
+    [$code, $body] = $request($teacher.'/siswa?q=000008&class=X%20B&participation=pending', $teacherJar);
+    $assert($code === 200 && str_contains($body, 'Siswa Impor') && ! str_contains($body, 'Siswa Simulasi'), 'Combined filters should render only matching students.');
     foreach ([1, 2] as $number) {
         [$code, $body] = $request($teacher.'/calon/tambah', $teacherJar);
         [$code] = $request($teacher.'/calon', $teacherJar, [
@@ -82,6 +111,8 @@ try {
     }
     [$code] = $request($teacher.'/rekap', $teacherJar);
     $assert($code === 403, 'Results must be hidden before closing.');
+    [$code] = $request($teacher.'/rekap.pdf', $teacherJar);
+    $assert($code === 403, 'PDF results must be hidden before closing.');
     [$code, $body] = $request($teacher, $teacherJar);
     [$code] = $request($teacher.'/buka', $teacherJar, ['_token' => $token($body), 'confirmation' => 'BUKA']);
     $assert($code === 302, 'Election should open.');
@@ -112,10 +143,24 @@ try {
     $assert($code === 200 && ! str_contains($body, '000007'), 'Final results must be anonymous.');
     [$code, $body] = $request($teacher.'/rekap.csv', $teacherJar);
     $assert($code === 200 && str_contains($body, '2,"Calon Simulasi 2",0'), 'CSV must contain zero-vote candidate.');
+    [$code, $body] = $request($teacher.'/progres', $teacherJar);
+    $progress = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
+    $assert($code === 200 && $progress['registered'] === 2 && $progress['participated'] === 1 && ! str_contains($body, 'candidate_id'), 'Progress must expose only aggregate turnout.');
+    [$code, $body] = $request($teacher.'/rekap.pdf', $teacherJar);
+    $assert($code === 200 && str_starts_with($body, '%PDF-'), 'Closed election PDF should download offline.');
     $assert(\App\Models\Vote::query()->count() === 1 && \App\Models\Participation::query()->count() === 1, 'Exactly one vote and participation must remain.');
-    echo "HTTP smoke PASS: cookies, CSRF, unggah calon, buka/tutup, pemilihan, replay, rekap dan CSV.\n";
+    echo "HTTP smoke PASS: cookies, CSRF, pengaturan, pratinjau/impor CSV, filter, unggah calon, buka/tutup, pemilihan, replay, progres dan PDF/CSV.\n";
 } finally {
-    $server->stop(3);
+    proc_terminate($server);
+    proc_close($server);
+    if (is_dir($directory.'/private')) {
+        $resolvedPrivate = strtolower(str_replace('\\', '/', realpath($directory.'/private')));
+        $resolvedTesting = strtolower(str_replace('\\', '/', realpath(storage_path('framework/testing'))));
+        if (! str_starts_with($resolvedPrivate.'/', $resolvedTesting.'/')) {
+            throw new RuntimeException('Refusing cleanup outside the testing workspace.');
+        }
+        \Illuminate\Support\Facades\File::deleteDirectory($directory.'/private');
+    }
     if (is_dir($directory.'/photos')) {
         foreach (\Illuminate\Support\Facades\File::files($directory.'/photos') as $file) unlink($file->getPathname());
         @rmdir($directory.'/photos');

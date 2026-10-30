@@ -7,11 +7,12 @@ use App\Models\ElectionSetting;
 use App\Models\Participation;
 use App\Models\Student;
 use App\Services\ElectionService;
+use App\Services\ParticipationService;
 use Illuminate\Http\Request;
 
 class TeacherElectionController extends Controller
 {
-    public function index(Request $request, ElectionService $service)
+    public function index(Request $request, ElectionService $service, ParticipationService $participation)
     {
         $setting = ElectionSetting::current();
         return view('teacher.dashboard', [
@@ -21,6 +22,8 @@ class TeacherElectionController extends Controller
             'participated' => Participation::query()->count(),
             'candidateCount' => Candidate::query()->count(),
             'readiness' => $setting->status === 'preparation' ? $service->readiness() : [],
+            'turnout' => $participation->summary(),
+            'scheduleNotice' => $service->scheduleNotice($setting),
         ]);
     }
 
@@ -40,7 +43,7 @@ class TeacherElectionController extends Controller
 
     public function results(Request $request, ElectionService $service)
     {
-        return view('teacher.results', $service->results() + ['teacherKey' => $request->route('teacherKey')]);
+        return view('teacher.results', $service->results() + ['teacherKey' => $request->route('teacherKey'), 'setting' => ElectionSetting::current()]);
     }
 
     public function export(ElectionService $service)

@@ -12,6 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->append(\App\Http\Middleware\PrivacyHeaders::class);
+        $middleware->web(prepend: [\App\Http\Middleware\ConfigureSessionLifetime::class]);
+        $middleware->web(append: [\App\Http\Middleware\ReconcileElectionSchedule::class]);
         $middleware->alias([
             'teacher' => \App\Http\Middleware\EnsureTeacherKey::class,
             'election.open' => \App\Http\Middleware\EnsureElectionOpen::class,

@@ -98,6 +98,7 @@ if (Test-LocalPort $Port) { throw "Port $Port sudah digunakan. Hentikan instance
 $apacheProcess = Start-Process -FilePath "$ApacheBase\bin\httpd.exe" -ArgumentList @('-f', "`"$apacheConfig`"") -WindowStyle Hidden -PassThru
 $apacheProcess.Id | Set-Content -LiteralPath (Join-Path $runtime 'apache-process.id')
 Wait-LocalPort $Port
+& (Join-Path $PSScriptRoot 'start-scheduler.ps1') -PhpBase $PhpBase
 Write-Host "Aplikasi siap: http://127.0.0.1:$Port"
 if (-not $LoopbackOnly) { Write-Host "Laptop siswa: http://IP-LOKAL-SERVER:$Port (atur firewall jaringan privat)." }
 Write-Host 'URL guru: jalankan php artisan election:teacher-url di terminal server.'

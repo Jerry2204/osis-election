@@ -19,6 +19,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        \Illuminate\Support\Facades\View::composer('layouts.app', function ($view) {
+            $view->with('schoolSetting', \App\Models\ElectionSetting::current());
+        });
         \Illuminate\Support\Facades\RateLimiter::for('nis', fn (\Illuminate\Http\Request $request) =>
             \Illuminate\Cache\RateLimiting\Limit::perMinute(30)->by($request->ip())->response(fn () =>
                 response()->view('errors.problem', ['code' => 429, 'message' => 'Terlalu banyak percobaan. Tunggu satu menit, lalu coba kembali.'], 429)
