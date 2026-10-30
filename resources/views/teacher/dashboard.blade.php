@@ -17,7 +17,7 @@
     <div class="heading-actions"><a class="button button-secondary" href="{{ route('teacher.students', ['teacherKey' => $teacherKey]) }}">Siapkan siswa</a><a class="button button-secondary" href="{{ route('teacher.candidates', ['teacherKey' => $teacherKey]) }}">Kelola {{ $candidateCount }} calon</a></div>
     <p class="field-help">Lengkapi data siswa dan minimal dua calon beserta fotonya. Suara dan partisipasi harus kosong; bila tidak, hubungi petugas teknis.</p>
 @elseif($setting->status === 'open')
-    <div class="notice-box">Pemilihan sedang berlangsung. Data siswa dan calon dikunci. Perolehan suara per calon tersedia setelah pemilihan ditutup.</div><p>Pastikan setiap pergantian siswa kembali ke halaman awal. Progres partisipasi diperbarui otomatis setiap 10 detik.</p>
+    <div class="notice-box">Pemilihan sedang berlangsung. Data siswa dan calon dikunci. Perolehan suara sementara dapat dipantau guru di bawah; rekap akhir tersedia setelah pemilihan ditutup.</div><p>Pastikan setiap pergantian siswa kembali ke halaman awal. Progres partisipasi diperbarui otomatis setiap 10 detik.</p>
 @else
     <div class="notice-box">Pemilihan telah selesai. Seluruh pilihan individu tetap rahasia.</div><a class="button button-primary" href="{{ route('teacher.results', ['teacherKey' => $teacherKey]) }}">Lihat rekap hasil →</a>
 @endif
@@ -37,6 +37,7 @@
 </section>
 </div>
 @if($setting->status === 'closed')@include('components.reopen-election')@endif
+@include('components.vote-tally')
 <section class="panel turnout-panel"><div class="section-heading"><h2>Partisipasi per kelas</h2><span class="badge badge-neutral">Pilihan individu tetap rahasia</span></div>
     <progress class="turnout-progress" data-overall-progress value="{{ $turnout['percentage'] }}" max="100" aria-label="Persentase partisipasi seluruh siswa">{{ $turnout['percentage'] }}%</progress>
     <p class="field-help" data-progress-message role="status">Data saat halaman dimuat. Diperbarui setiap 10 detik.</p>

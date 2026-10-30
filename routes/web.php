@@ -33,6 +33,7 @@ Route::middleware('election.open')->group(function () {
 Route::prefix('ruang-guru/{teacherKey}')->where(['teacherKey' => '[a-f0-9]{64}'])->middleware('teacher')->name('teacher.')->group(function () {
     Route::get('/', [TeacherElectionController::class, 'index'])->name('dashboard');
     Route::get('/progres', [ElectionStatusController::class, 'progress'])->name('progress');
+    Route::get('/perolehan-suara', [ElectionStatusController::class, 'tally'])->name('tally');
     Route::get('/pengaturan', [TeacherSettingsController::class, 'index'])->name('settings');
     Route::patch('/pengaturan', [TeacherSettingsController::class, 'update'])->name('settings.update')->block();
     Route::get('/siswa', [TeacherStudentController::class, 'index'])->name('students');

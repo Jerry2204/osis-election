@@ -8,12 +8,13 @@ use App\Models\Participation;
 use App\Models\Student;
 use App\Services\ElectionService;
 use App\Services\ParticipationService;
+use App\Services\VoteTallyService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 
 class TeacherElectionController extends Controller
 {
-    public function index(Request $request, ElectionService $service, ParticipationService $participation)
+    public function index(Request $request, ElectionService $service, ParticipationService $participation, VoteTallyService $tally)
     {
         $setting = ElectionSetting::current();
         return view('teacher.dashboard', [
@@ -25,6 +26,7 @@ class TeacherElectionController extends Controller
             'readiness' => $setting->status === 'preparation' ? $service->readiness() : [],
             'turnout' => $participation->summary(),
             'scheduleNotice' => $service->scheduleNotice($setting),
+            'tally' => $tally->snapshot(),
         ]);
     }
 

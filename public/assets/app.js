@@ -136,6 +136,78 @@ if (turnout) {
     document.addEventListener('visibilitychange', () => { if (!document.hidden) update(); });
 }
 
+const liveTally = document.querySelector('[data-live-tally]');
+if (liveTally) {
+    const message = liveTally.querySelector('[data-tally-message]');
+    const numbers = new Intl.NumberFormat('id-ID');
+    const percentages = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    let updating = false;
+    const update = async () => {
+        if (document.hidden || updating) return;
+        updating = true;
+        try {
+            const response = await fetch(liveTally.dataset.tallyUrl, {
+                credentials: 'same-origin', cache: 'no-store', headers: { Accept: 'application/json' },
+                signal: AbortSignal.timeout(8000),
+            });
+            if (!response.ok) throw new Error('Tally unavailable');
+            const data = await response.json();
+            if (!['preparation', 'open', 'closed'].includes(data.status) || !Number.isInteger(data.total_votes) || data.total_votes < 0 ||
+                !Array.isArray(data.candidates) || data.candidates.some(item => typeof item.name !== 'string' ||
+                    !Number.isInteger(item.number) || !Number.isInteger(item.votes) || item.votes < 0 ||
+                    !Number.isFinite(item.percentage) || item.percentage < 0 || item.percentage > 100)) throw new Error('Invalid tally');
+            const updatedTime = new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Jakarta', timeStyle: 'medium' }).format(new Date(data.updated_at));
+            const rows = document.createDocumentFragment();
+            data.candidates.forEach((candidate) => {
+                const row = document.createElement('tr');
+                const personCell = document.createElement('td');
+                const person = document.createElement('div');
+                person.className = 'tally-candidate';
+                const number = document.createElement('small');
+                number.textContent = `Nomor ${String(candidate.number).padStart(2, '0')}`;
+                const name = document.createElement('strong');
+                name.textContent = candidate.name;
+                person.append(number, name);
+                personCell.append(person);
+                const graphCell = document.createElement('td');
+                const graph = document.createElement('progress');
+                graph.max = 100;
+                graph.value = candidate.percentage;
+                graph.setAttribute('aria-label', `Perolehan ${candidate.name}: ${candidate.votes} suara`);
+                const percentage = document.createElement('small');
+                percentage.textContent = `${percentages.format(candidate.percentage)}%`;
+                graphCell.append(graph, percentage);
+                const votesCell = document.createElement('td');
+                votesCell.className = 'vote-count';
+                votesCell.textContent = numbers.format(candidate.votes);
+                row.append(personCell, graphCell, votesCell);
+                rows.append(row);
+            });
+            if (!data.candidates.length) {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = 3;
+                cell.textContent = 'Belum ada calon terdaftar. Tambahkan calon untuk melihat perolehan suara.';
+                row.append(cell);
+                rows.append(row);
+            }
+            liveTally.querySelector('[data-tally-rows]').replaceChildren(rows);
+            liveTally.querySelector('[data-tally-total]').textContent = numbers.format(data.total_votes);
+            liveTally.querySelector('[data-tally-title]').textContent = data.status === 'closed' ? 'Perolehan suara akhir' : 'Perolehan suara sementara';
+            liveTally.querySelector('[data-tally-badge]').textContent = { preparation: 'Belum dimulai', open: 'Sementara · khusus guru', closed: 'Hasil akhir' }[data.status];
+            message.textContent = `Diperbarui ${updatedTime} WIB · setiap 10 detik.`;
+            message.classList.remove('update-delayed');
+        } catch {
+            message.textContent = 'Pembaruan perolehan tertunda. Menampilkan data terakhir; akan mencoba kembali.';
+            message.classList.add('update-delayed');
+        } finally {
+            updating = false;
+        }
+    };
+    window.setInterval(update, 10000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) update(); });
+}
+
 const electionWatch = document.querySelector('[data-election-watch]');
 if (electionWatch) {
     let updating = false;

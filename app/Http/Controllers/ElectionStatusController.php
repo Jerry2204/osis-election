@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\ElectionService;
 use App\Services\ParticipationService;
+use App\Services\VoteTallyService;
 
 class ElectionStatusController extends Controller
 {
@@ -25,5 +26,11 @@ class ElectionStatusController extends Controller
             'status' => $setting->status,
             'updated_at' => now()->toIso8601String(),
         ]);
+    }
+
+    public function tally(ElectionService $election, VoteTallyService $tally)
+    {
+        $election->reconcile();
+        return response()->json($tally->snapshot());
     }
 }

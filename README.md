@@ -96,7 +96,9 @@ Dashboard **Ringkasan** memperbarui progres keseluruhan dan per kelas setiap 10 
 6. Setelah semua selesai, guru mengetik **TUTUP**. Penutupan memakai penguncian yang sama dengan suara, sehingga menunggu transaksi yang sudah lebih dulu mendapat kunci. Suara yang baru diproses setelah ditutup ditolak; guru dapat membuka kembali melalui kontrol khusus di bawah.
 7. Lihat rekap dan unduh CSV. Calon dengan nol suara tetap muncul. Tidak ada pilihan individu. Buat backup final dan salin ke media terpisah.
 
-Rekap per calon dan ekspornya ditolak sebelum ditutup, termasuk akses route langsung. Ringkasan selama pemilihan hanya menampilkan jumlah siswa, calon dan partisipasi.
+Rekap akhir dan ekspornya ditolak sebelum ditutup, termasuk akses route langsung. Guru dapat melihat **Perolehan suara sementara** di **Ringkasan** selama pemilihan berlangsung: jumlah suara setiap calon, persentase dari total suara masuk, grafik, serta total suara. Panel ini diperbarui otomatis setiap 10 detik saat halaman terlihat; bila koneksi terganggu, data terakhir tetap ditampilkan dengan penanda pembaruan tertunda. Setelah ditutup, label berubah menjadi perolehan akhir; setelah dibuka kembali, suara lama tetap dihitung dalam hasil sementara.
+
+Perolehan sementara hanya tersedia untuk guru melalui halaman Ringkasan dan endpoint berkode guru `/ruang-guru/{teacherKey}/perolehan-suara`. Endpoint progres partisipasi tetap terpisah dan tidak memuat hasil calon. Halaman siswa dan layar pengumuman publik tidak menampilkan suara sementara; pengumuman tetap memerlukan penutupan dan aktivasi panitia. Tidak ada NIS atau identitas pemilih dalam data perolehan.
 
 ### Membuka kembali pemilihan
 
