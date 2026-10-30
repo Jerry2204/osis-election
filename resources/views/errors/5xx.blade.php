@@ -1,0 +1,1 @@
+@include('errors.problem', ['code' => $exception->getStatusCode(), 'message' => 'Terjadi gangguan layanan. Hubungi petugas. Jika sebelumnya mengirim suara, jangan menganggap suara gagal sebelum status NIS diperiksa.'])

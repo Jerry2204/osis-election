@@ -1,0 +1,2 @@
+<div class="candidate-image"><img src="{{ route('candidate.photo', $candidate) }}" alt="Foto {{ $candidate->name }}" width="600" height="600"><span class="candidate-number">{{ str_pad($candidate->number, 2, '0', STR_PAD_LEFT) }}</span></div>
+<div class="candidate-body"><span class="eyebrow">CALON KETUA OSIS</span><h2>{{ $candidate->name }}</h2><h3>Visi</h3><p class="preserve-lines">{{ $candidate->vision }}</p><h3>Misi</h3><p class="preserve-lines">{{ $candidate->mission }}</p></div>

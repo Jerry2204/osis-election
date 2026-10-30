@@ -1,0 +1,1 @@
+@include('errors.problem', ['code' => 419, 'message' => 'Formulir sudah kedaluwarsa atau sudah digunakan. Silakan mulai kembali. Jika sebelumnya mengirim suara, minta petugas memeriksa status NIS terlebih dahulu.'])

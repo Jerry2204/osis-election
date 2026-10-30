@@ -1,0 +1,1 @@
+@include('errors.problem', ['code' => $exception->getStatusCode(), 'message' => 'Permintaan tidak dapat diproses. Periksa alamat atau buka kembali formulir yang sesuai. Jika sebelumnya mengirim suara, minta petugas memeriksa status NIS.'])
