@@ -6,6 +6,7 @@ use App\Http\Controllers\TeacherStudentController;
 use App\Http\Controllers\TeacherSettingsController;
 use App\Http\Controllers\TeacherReportController;
 use App\Http\Controllers\ElectionStatusController;
+use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\VoterSessionController;
 use App\Http\Controllers\VotingController;
 use Illuminate\Support\Facades\Route;
@@ -16,6 +17,8 @@ Route::get('/berhasil', [VotingController::class, 'success'])->name('voting.succ
 Route::get('/foto-calon/{candidate}', [VotingController::class, 'photo'])->name('candidate.photo');
 Route::get('/status-pemilihan', [ElectionStatusController::class, 'publicStatus'])->name('election.status');
 Route::get('/logo-sekolah', [TeacherSettingsController::class, 'logo'])->name('school.logo');
+Route::get('/pengumuman', [AnnouncementController::class, 'show'])->name('announcement');
+Route::get('/pengumuman/status', [AnnouncementController::class, 'status'])->name('announcement.status');
 
 Route::middleware('election.open')->group(function () {
     Route::post('/verifikasi-nis', [VoterSessionController::class, 'verify'])->middleware('throttle:nis')->name('voting.verify')->block();
@@ -49,4 +52,6 @@ Route::prefix('ruang-guru/{teacherKey}')->where(['teacherKey' => '[a-f0-9]{64}']
     Route::get('/rekap', [TeacherElectionController::class, 'results'])->name('results');
     Route::get('/rekap.csv', [TeacherElectionController::class, 'export'])->name('export');
     Route::get('/rekap.pdf', [TeacherReportController::class, 'download'])->name('report.pdf');
+    Route::get('/pengumuman/pratinjau', [AnnouncementController::class, 'preview'])->name('announcement.preview');
+    Route::post('/pengumuman', [AnnouncementController::class, 'update'])->name('announcement.update')->block();
 });

@@ -113,6 +113,10 @@ try {
     $assert($code === 403, 'Results must be hidden before closing.');
     [$code] = $request($teacher.'/rekap.pdf', $teacherJar);
     $assert($code === 403, 'PDF results must be hidden before closing.');
+    [$code, $body] = $request('/pengumuman', $replayJar);
+    $assert($code === 404 && ! str_contains($body, 'Calon Simulasi'), 'Announcement must not expose candidates before publication.');
+    [$code] = $request($teacher.'/pengumuman', $teacherJar, ['enabled' => '1']);
+    $assert($code === 419, 'Announcement publication requires real CSRF.');
     [$code, $body] = $request($teacher, $teacherJar);
     [$code] = $request($teacher.'/buka', $teacherJar, ['_token' => $token($body), 'confirmation' => 'BUKA']);
     $assert($code === 302, 'Election should open.');
@@ -148,8 +152,21 @@ try {
     $assert($code === 200 && $progress['registered'] === 2 && $progress['participated'] === 1 && ! str_contains($body, 'candidate_id'), 'Progress must expose only aggregate turnout.');
     [$code, $body] = $request($teacher.'/rekap.pdf', $teacherJar);
     $assert($code === 200 && str_starts_with($body, '%PDF-'), 'Closed election PDF should download offline.');
+    [$code, $body] = $request($teacher.'/pengumuman/pratinjau', $teacherJar);
+    $assert($code === 200 && str_contains($body, 'Pratinjau panitia'), 'Teacher preview should render without publication.');
+    [$code] = $request('/pengumuman', $replayJar);
+    $assert($code === 404, 'Preview must not publish results.');
+    [$code, $body] = $request($teacher.'/rekap', $teacherJar);
+    [$code] = $request($teacher.'/pengumuman', $teacherJar, ['_token' => $token($body), 'enabled' => '1']);
+    $assert($code === 302, 'Teacher can publish closed results.');
+    [$code, $body] = $request('/pengumuman', $replayJar);
+    $assert($code === 200 && str_contains($body, 'Calon Simulasi 1') && ! str_contains($body, config('election.teacher_key')) && ! str_contains($body, '000007'), 'Public announcement must expose aggregate results only.');
+    [$code, $body] = $request($teacher.'/rekap', $teacherJar);
+    $request($teacher.'/pengumuman', $teacherJar, ['_token' => $token($body), 'enabled' => '0']);
+    [$code, $body] = $request('/pengumuman/status', $replayJar);
+    $assert($code === 200 && json_decode($body, true)['available'] === false, 'Withdrawal must reach open announcement screens.');
     $assert(\App\Models\Vote::query()->count() === 1 && \App\Models\Participation::query()->count() === 1, 'Exactly one vote and participation must remain.');
-    echo "HTTP smoke PASS: cookies, CSRF, pengaturan, pratinjau/impor CSV, filter, unggah calon, buka/tutup, pemilihan, replay, progres dan PDF/CSV.\n";
+    echo "HTTP smoke PASS: cookies, CSRF, pengaturan, pratinjau/impor CSV, filter, unggah calon, buka/tutup, pemilihan, replay, progres, PDF/CSV dan pengumuman.\n";
 } finally {
     proc_terminate($server);
     proc_close($server);

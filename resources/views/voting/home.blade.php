@@ -23,7 +23,11 @@
                 </form>
             @else
                 <div class="closed-message"><h3>{{ $setting->status === 'closed' ? 'Terima kasih atas partisipasinya.' : 'Sebentar lagi, giliran suaramu.' }}</h3><p>{{ $setting->status === 'closed' ? 'Pemilihan telah selesai. Pengumuman hasil akan disampaikan oleh panitia.' : 'Panitia sedang menyiapkan pemilihan. Silakan ikuti arahan petugas.' }}</p></div>
-                <a class="button button-secondary button-full" href="{{ route('home') }}">Periksa status pemilihan <span aria-hidden="true">↻</span></a>
+                @if($setting->status === 'closed' && $setting->results_published)
+                    <a class="button button-primary button-full" href="{{ route('announcement') }}">Lihat pengumuman hasil <span aria-hidden="true">→</span></a>
+                @else
+                    <a class="button button-secondary button-full" href="{{ route('home') }}">Periksa status pemilihan <span aria-hidden="true">↻</span></a>
+                @endif
             @endif
             @if($setting->status !== 'closed' && $setting->opens_at && $setting->closes_at)
                 @php($scheduleTarget = $setting->status === 'open' ? $setting->closes_at : $setting->opens_at)

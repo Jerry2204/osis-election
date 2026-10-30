@@ -14,11 +14,13 @@ class ElectionSetting extends Model
         'status', 'school_name', 'election_title', 'osis_period', 'logo_path',
         'opens_at', 'closes_at', 'opened_at', 'closed_at',
         'report_place', 'committee_chair', 'osis_advisor', 'principal_name',
+        'results_published',
     ];
 
     protected function casts(): array
     {
         return [
+            'results_published' => 'boolean',
             'opens_at' => 'immutable_datetime',
             'closes_at' => 'immutable_datetime',
             'opened_at' => 'immutable_datetime',

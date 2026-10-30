@@ -25,3 +25,4 @@
 .student-privacy-note{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
 @media(max-width:1050px){.student-filters{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.student-filters{grid-template-columns:minmax(0,1fr);gap:18px}.student-filter-actions{padding-top:0}.student-filter-actions .button{flex:1;padding-inline:14px}.student-filters .student-filter-help{margin-top:-4px}.student-empty-state{padding:20px}}
+.announcement-control{margin-bottom:28px}.announcement-control-actions{margin-top:20px}.announcement-control form{margin:0}.announcement-control .field-help{overflow-wrap:anywhere}

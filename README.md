@@ -133,6 +133,14 @@ Scheduler memeriksa jadwal dan sesi setiap menit, membersihkan pratinjau kedaluw
 
 Cadangkan juga kode siap jalan beserta `vendor`, foto di `storage/app/private/candidate-photos`, serta `.env` secara aman. Batasi akses salinan karena berisi data siswa dan konfigurasi rahasia. Lindungi file `.runtime/mysql-admin.json` pada instalasi lokal. Hindari menyalin berkas data MySQL yang sedang aktif sebagai pengganti dump konsisten.
 
+## Layar pengumuman hasil
+
+Setelah pemilihan ditutup, buka **Ruang Guru → Rekap hasil → Layar pengumuman hasil**. **Pratinjau layar** memperlihatkan tampilan proyektor tanpa membuka hasil kepada siswa. Klik **Aktifkan pengumuman**, lalu **Buka layar pengumuman** untuk menampilkan hasil pada alamat `/pengumuman`. Laptop proyektor lain menggunakan `http://IP-SERVER:8080/pengumuman`; alamat ini tidak mengandung kode guru. Tombol **Layar penuh** tersedia pada browser yang mendukungnya, dengan Escape untuk keluar.
+
+Layar menampilkan identitas sekolah, foto/nomor calon, grafik dan persentase suara, total suara, serta partisipasi keseluruhan. Calon diurutkan menurut perolehan lalu nomor urut; hasil seri ditandai sebagai perolehan tertinggi bersama, tanpa menetapkan pemenang tunggal. Kondisi tanpa suara ditampilkan secara eksplisit. Tidak ada NIS, nama siswa, atau tautan administrasi pada layar publik.
+
+Pengumuman awalnya nonaktif dan hanya dapat diaktifkan setelah penutupan serta jumlah partisipasi sesuai dengan suara. **Sembunyikan pengumuman** menutup akses kembali; layar yang sedang terbuka memeriksa status setiap lima detik saat tersambung. Tanpa JavaScript, gunakan tombol periksa pengumuman atau muat ulang halaman. Semua aset tersedia lokal tanpa CDN.
+
 ## Gangguan dan pemulihan
 
 Untuk koneksi putus atau respons kirim yang tidak jelas, **jangan berasumsi suara gagal**. Petugas memeriksa status tanpa melihat pilihan:
