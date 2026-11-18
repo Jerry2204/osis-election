@@ -55,6 +55,13 @@
             <select id="student-participation" name="participation" aria-invalid="{{ $errors->has('participation') ? 'true' : 'false' }}" @if($errors->has('participation')) aria-describedby="student-participation-error" @endif><option value="all" @selected($filters['participation'] === 'all')>Semua siswa</option><option value="voted" @selected($filters['participation'] === 'voted')>Sudah memilih</option><option value="pending" @selected($filters['participation'] === 'pending')>Belum memilih</option></select>
             @error('participation')<p id="student-participation-error" class="field-error">{{ $message }}</p>@enderror
         </div>
+        <div class="student-filter-field">
+            <label for="student-per-page">Siswa per halaman</label>
+            <select id="student-per-page" name="per_page" aria-invalid="{{ $errors->has('per_page') ? 'true' : 'false' }}" @if($errors->has('per_page')) aria-describedby="student-per-page-error" @endif>
+                @foreach([10, 25, 50, 100] as $pageSize)<option value="{{ $pageSize }}" @selected($filters['per_page'] === $pageSize)>{{ $pageSize }}</option>@endforeach
+            </select>
+            @error('per_page')<p id="student-per-page-error" class="field-error">{{ $message }}</p>@enderror
+        </div>
         <div class="student-filter-actions"><button type="submit" class="button button-primary">Tampilkan</button><a class="button button-secondary" href="{{ route('teacher.students', ['teacherKey' => $teacherKey]) }}">Reset filter</a></div>
         <p id="student-search-help" class="field-help student-filter-help">Pencarian nama tidak membedakan huruf besar dan kecil.</p>
     </form>
@@ -71,7 +78,7 @@
     @endif
     @if($students->hasPages())
         <nav class="form-bottom" aria-label="Halaman daftar siswa">
-            <p class="field-help">Halaman {{ $students->currentPage() }} dari {{ $students->lastPage() }} &middot; 50 siswa per halaman</p>
+            <p class="field-help">Halaman {{ $students->currentPage() }} dari {{ $students->lastPage() }} &middot; {{ $students->perPage() }} siswa per halaman</p>
             <div class="student-pagination">
                 @if($students->onFirstPage())<span class="field-help">Sebelumnya</span>@else<a class="button button-secondary" href="{{ $students->previousPageUrl() }}" rel="prev">Sebelumnya</a>@endif
                 @if($students->hasMorePages())<a class="button button-secondary" href="{{ $students->nextPageUrl() }}" rel="next">Berikutnya</a>@else<span class="field-help">Berikutnya</span>@endif

@@ -40,7 +40,7 @@
 @include('components.vote-tally')
 <section class="panel turnout-panel"><div class="section-heading"><h2>Partisipasi per kelas</h2><span class="badge badge-neutral">Pilihan individu tetap rahasia</span></div>
     <progress class="turnout-progress" data-overall-progress value="{{ $turnout['percentage'] }}" max="100" aria-label="Persentase partisipasi seluruh siswa">{{ $turnout['percentage'] }}%</progress>
-    <p class="field-help" data-progress-message role="status">Data saat halaman dimuat. Diperbarui setiap 10 detik.</p>
+    <p class="field-help" data-progress-message role="status">Data saat halaman dimuat.@if($setting->status === 'open') Diperbarui setiap 10 detik selama pemilihan berlangsung.@endif</p>
     <div class="table-scroll"><table class="results-table students-table turnout-table"><thead><tr><th scope="col">Kelas</th><th scope="col">Terdaftar</th><th scope="col">Sudah memilih</th><th scope="col">Belum memilih</th><th scope="col">Partisipasi</th></tr></thead><tbody data-class-progress>@forelse($turnout['classes'] as $class)<tr><th scope="row">{{ $class['class_name'] }}</th><td>{{ $class['registered'] }}</td><td>{{ $class['participated'] }}</td><td>{{ $class['remaining'] }}</td><td>{{ number_format($class['percentage'], 1, ',', '.') }}%</td></tr>@empty<tr><td colspan="5">Belum ada data siswa. Impor siswa untuk melihat progres per kelas.</td></tr>@endforelse</tbody></table></div>
 </section>
 </div>

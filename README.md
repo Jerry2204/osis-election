@@ -50,7 +50,7 @@ Perintah `election:teacher-url --generate` hanya membuat kode ketika belum terse
 
 Buka URL guru, lalu pilih menu **Data siswa** (`/ruang-guru/{teacherKey}/siswa`). Klik **Unduh template CSV**, isi data siswa di bawah header, pilih berkas tersebut, lalu klik **Periksa dan pratinjau**. Periksa jumlah data, 20 contoh baris pertama, dan pesan kesalahan. Jika seluruh data valid, klik **Simpan impor**. Unggahan belum menyimpan siswa sampai konfirmasi ini. Template kosong tersedia di `docs/template-siswa.csv`. Pratinjau terikat sesi guru, berlaku 30 menit, dan dapat dibatalkan. Konfirmasi selalu memeriksa ulang data serta kesiapan pemilihan.
 
-Daftar menampilkan 50 siswa per halaman. Gunakan pencarian NIS/nama, filter kelas, dan status sudah/belum memilih secara bersamaan; filter tetap aktif saat berpindah halaman. Status partisipasi tidak menampilkan calon yang dipilih siswa.
+Daftar menampilkan 50 siswa per halaman secara bawaan. Pilih 10, 25, 50, atau 100 siswa per halaman sesuai kebutuhan. Gunakan pencarian NIS/nama, filter kelas, dan status sudah/belum memilih secara bersamaan; filter dan jumlah siswa per halaman tetap aktif saat berpindah halaman. Status partisipasi tidak menampilkan calon yang dipilih siswa.
 
 Impor hanya tersedia saat persiapan. Jika ada kesalahan, halaman menampilkan nomor baris untuk diperbaiki dan tidak menyimpan bagian mana pun dari berkas. NIS duplikat dalam berkas maupun yang sudah terdaftar membatalkan seluruh impor; data lama tidak ditimpa. Setelah pemilihan dibuka atau ditutup, daftar tetap dapat dilihat tetapi impor dikunci.
 

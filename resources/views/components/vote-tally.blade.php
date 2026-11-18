@@ -3,9 +3,9 @@
         <h2 data-tally-title>{{ $tally['status'] === 'closed' ? 'Perolehan suara akhir' : 'Perolehan suara sementara' }}</h2>
         <span class="badge badge-neutral" data-tally-badge>{{ ['preparation' => 'Belum dimulai', 'open' => 'Sementara · khusus guru', 'closed' => 'Hasil akhir'][$tally['status']] }}</span>
     </div>
-    <p class="field-help">Perolehan suara diperbarui otomatis setiap 10 detik. Hasil sementara hanya untuk pemantauan guru; pengumuman kepada siswa tetap menunggu pemilihan ditutup dan aktivasi panitia.</p>
+    <p class="field-help">Perolehan suara diperbarui otomatis setiap 10 detik selama pemilihan berlangsung. Hasil sementara hanya untuk pemantauan guru; pengumuman kepada siswa tetap menunggu pemilihan ditutup dan aktivasi panitia.</p>
     <div class="live-tally-summary"><span>Total suara masuk</span><strong data-tally-total>{{ number_format($tally['total_votes'], 0, ',', '.') }}</strong></div>
-    <p class="field-help" data-tally-message role="status">Data saat halaman dimuat. Diperbarui setiap 10 detik.</p>
+    <p class="field-help" data-tally-message role="status">Data saat halaman dimuat.@if($tally['status'] === 'open') Diperbarui setiap 10 detik selama pemilihan berlangsung.@endif</p>
     <div class="table-scroll">
         <table class="results-table live-tally-table">
             <caption class="sr-only">Perolehan suara setiap calon, khusus untuk guru</caption>

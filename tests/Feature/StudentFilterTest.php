@@ -67,6 +67,31 @@ class StudentFilterTest extends TestCase
             ->assertViewHas('students', fn ($students) => $students->count() === 1);
     }
 
+    public function test_page_size_can_be_selected_and_is_kept_in_pagination_links(): void
+    {
+        for ($i = 1; $i <= 51; $i++) {
+            $this->student(sprintf('%05d', $i), sprintf('Siswa %02d', $i), 'X A');
+        }
+
+        foreach ([10, 25, 50, 100] as $pageSize) {
+            $params = ['class' => 'X A', 'per_page' => $pageSize];
+            $this->get($this->teacher.'?'.http_build_query($params))->assertOk()
+                ->assertViewHas('students', function ($students) use ($pageSize) {
+                    if ($students->perPage() !== $pageSize || $students->count() !== min(51, $pageSize)) {
+                        return false;
+                    }
+                    if ($pageSize === 100) {
+                        return ! $students->hasMorePages();
+                    }
+                    parse_str(parse_url($students->nextPageUrl(), PHP_URL_QUERY), $next);
+                    return $next['per_page'] === (string) $pageSize && $next['class'] === 'X A' && $next['page'] === '2';
+                });
+        }
+
+        $this->get($this->teacher.'?per_page=25&page=2')->assertOk()
+            ->assertViewHas('students', fn ($students) => $students->perPage() === 25 && $students->count() === 25);
+    }
+
     public function test_no_matches_and_invalid_filter_values_are_handled(): void
     {
         $this->student('001', 'Alya', 'X A');
@@ -74,5 +99,6 @@ class StudentFilterTest extends TestCase
             ->assertViewHas('registered', 1)->assertViewHas('students', fn ($students) => $students->total() === 0);
         $this->from($this->teacher)->get($this->teacher.'?participation=invalid')->assertRedirect($this->teacher)->assertSessionHasErrors('participation');
         $this->from($this->teacher)->get($this->teacher.'?q%5B%5D=Alya')->assertRedirect($this->teacher)->assertSessionHasErrors('q');
+        $this->from($this->teacher)->get($this->teacher.'?per_page=1000')->assertRedirect($this->teacher)->assertSessionHasErrors('per_page');
     }
 }

@@ -76,13 +76,14 @@ if (candidateForm) {
 
 // All requests below read aggregate status only. Polling never submits a vote.
 const turnout = document.querySelector('[data-turnout]');
-if (turnout) {
+if (turnout && turnout.dataset.currentStatus === 'open') {
     const message = turnout.querySelector('[data-progress-message]');
     const numberFormat = new Intl.NumberFormat('id-ID');
     const percentFormat = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
     let updating = false;
+    let polling = true;
     const update = async () => {
-        if (document.hidden || updating) return;
+        if (!polling || document.hidden || updating) return;
         updating = true;
         try {
             const response = await fetch(turnout.dataset.progressUrl, {
@@ -92,6 +93,10 @@ if (turnout) {
             if (!response.ok) throw new Error('Status unavailable');
             const data = await response.json();
             if (!Array.isArray(data.classes) || !Number.isFinite(data.registered)) throw new Error('Invalid status');
+            if (data.status !== 'open') {
+                polling = false;
+                window.clearInterval(intervalId);
+            }
             if (data.status !== turnout.dataset.currentStatus && !document.activeElement?.closest('form')) {
                 window.location.reload();
                 return;
@@ -123,7 +128,9 @@ if (turnout) {
                 rows.append(row);
             }
             body.replaceChildren(rows);
-            message.textContent = `Diperbarui ${new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Jakarta', timeStyle: 'medium' }).format(new Date(data.updated_at))} WIB · setiap 10 detik.`;
+            message.textContent = data.status === 'open'
+                ? `Diperbarui ${new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Jakarta', timeStyle: 'medium' }).format(new Date(data.updated_at))} WIB · setiap 10 detik.`
+                : 'Pembaruan otomatis berhenti karena pemilihan tidak berlangsung.';
             message.classList.remove('update-delayed');
         } catch {
             message.textContent = 'Pembaruan tertunda. Menampilkan data terakhir; akan mencoba kembali.';
@@ -132,18 +139,19 @@ if (turnout) {
             updating = false;
         }
     };
-    window.setInterval(update, 10000);
+    const intervalId = window.setInterval(update, 10000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) update(); });
 }
 
 const liveTally = document.querySelector('[data-live-tally]');
-if (liveTally) {
+if (liveTally && turnout?.dataset.currentStatus === 'open') {
     const message = liveTally.querySelector('[data-tally-message]');
     const numbers = new Intl.NumberFormat('id-ID');
     const percentages = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
     let updating = false;
+    let polling = true;
     const update = async () => {
-        if (document.hidden || updating) return;
+        if (!polling || document.hidden || updating) return;
         updating = true;
         try {
             const response = await fetch(liveTally.dataset.tallyUrl, {
@@ -156,6 +164,10 @@ if (liveTally) {
                 !Array.isArray(data.candidates) || data.candidates.some(item => typeof item.name !== 'string' ||
                     !Number.isInteger(item.number) || !Number.isInteger(item.votes) || item.votes < 0 ||
                     !Number.isFinite(item.percentage) || item.percentage < 0 || item.percentage > 100)) throw new Error('Invalid tally');
+            if (data.status !== 'open') {
+                polling = false;
+                window.clearInterval(intervalId);
+            }
             const updatedTime = new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Jakarta', timeStyle: 'medium' }).format(new Date(data.updated_at));
             const rows = document.createDocumentFragment();
             data.candidates.forEach((candidate) => {
@@ -195,7 +207,7 @@ if (liveTally) {
             liveTally.querySelector('[data-tally-total]').textContent = numbers.format(data.total_votes);
             liveTally.querySelector('[data-tally-title]').textContent = data.status === 'closed' ? 'Perolehan suara akhir' : 'Perolehan suara sementara';
             liveTally.querySelector('[data-tally-badge]').textContent = { preparation: 'Belum dimulai', open: 'Sementara · khusus guru', closed: 'Hasil akhir' }[data.status];
-            message.textContent = `Diperbarui ${updatedTime} WIB · setiap 10 detik.`;
+            message.textContent = data.status === 'open' ? `Diperbarui ${updatedTime} WIB · setiap 10 detik.` : 'Pembaruan otomatis berhenti karena pemilihan tidak berlangsung.';
             message.classList.remove('update-delayed');
         } catch {
             message.textContent = 'Pembaruan perolehan tertunda. Menampilkan data terakhir; akan mencoba kembali.';
@@ -204,7 +216,7 @@ if (liveTally) {
             updating = false;
         }
     };
-    window.setInterval(update, 10000);
+    const intervalId = window.setInterval(update, 10000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) update(); });
 }
 

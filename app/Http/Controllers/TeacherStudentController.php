@@ -19,11 +19,13 @@ class TeacherStudentController extends Controller
             'q' => ['nullable', 'string', 'max:120'],
             'class' => ['nullable', 'string', 'max:60'],
             'participation' => ['nullable', Rule::in(['all', 'voted', 'pending'])],
+            'per_page' => ['nullable', Rule::in(['10', '25', '50', '100'])],
         ]);
         $filters = [
             'q' => trim($filters['q'] ?? ''),
             'class' => $filters['class'] ?? '',
             'participation' => $filters['participation'] ?? 'all',
+            'per_page' => (int) ($filters['per_page'] ?? 50),
         ];
         $query = Student::query()->withExists('participation');
         if ($filters['q'] !== '') {
@@ -45,7 +47,7 @@ class TeacherStudentController extends Controller
         return view('teacher.students', [
             'teacherKey' => $request->route('teacherKey'),
             'setting' => ElectionSetting::current(),
-            'students' => $query->orderBy('class_name')->orderBy('name')->orderBy('nis')->paginate(50)->withQueryString(),
+            'students' => $query->orderBy('class_name')->orderBy('name')->orderBy('nis')->paginate($filters['per_page'])->withQueryString(),
             'registered' => Student::query()->count(),
             'classes' => Student::query()->select('class_name')->distinct()->orderBy('class_name')->pluck('class_name'),
             'filters' => $filters,
